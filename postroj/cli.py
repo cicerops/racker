@@ -4,7 +4,7 @@ import json
 
 import click
 
-from postroj import pkgprobe, runner, selftest, winrunner
+from postroj import pkgprobe, selftest
 from postroj.api import pull_multiple_images, pull_single_image
 from postroj.registry import list_images
 from postroj.util import boot
@@ -48,6 +48,5 @@ def cli_pull(ctx: click.Context, name: str, pull_all: bool = False):
 
 cli.add_command(cmd=cli_list_images, name="list-images")
 cli.add_command(cmd=cli_pull, name="pull")
-cli.add_command(cmd=runner.invoke, name="invoke")
 cli.add_command(cmd=pkgprobe.main, name="pkgprobe")
 cli.add_command(cmd=selftest.selftest_main, name="selftest")

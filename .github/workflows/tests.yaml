@@ -49,8 +49,8 @@ jobs:
     - name: Run tests
       # FIXME: Can this be run without elevated privileges?
       run: |
-        sudo $(command -v pytest)
-        coverage xml
+        sudo --preserve-env $(command -v pytest)
+        coverage xml --omit postroj/winrunner.py
 
     - name: Upload coverage results to Codecov
       uses: codecov/codecov-action@v3

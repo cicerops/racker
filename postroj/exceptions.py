@@ -11,7 +11,7 @@ class ProvisioningError(Exception):
 
 
 class InvalidImageReference(Exception):
-    pass
+    returncode = 1
 
 
 class InvalidPhysicalImage(Exception):

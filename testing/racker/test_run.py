@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 # (c) 2022 Andreas Motl <andreas.motl@cicerops.de>
+import re
 import shlex
 import subprocess
 import sys
 from pathlib import Path
+from unittest import mock
 
 import pytest
 from click._compat import strip_ansi
@@ -11,6 +13,9 @@ from click.testing import CliRunner
 
 from racker.cli import cli
 
+
+# Currently, this test module effectively runs well on Linux,
+# because it invokes machinery based on `systemd-nspawn`.
 
 if sys.platform != "linux":
     pytest.skip("Skipping Linux-only tests", allow_module_level=True)
@@ -102,6 +107,73 @@ def test_run_stdin_stdout(monkeypatch, capsys, delay):
     process = subprocess.run(shlex.split(command), input=b"foo", stdout=subprocess.PIPE, env={"TESTING": "true"})
     process.check_returncode()
     assert process.stdout == b"foo"
+
+
+@pytest.mark.xfail(reason="Not working within Linux VM on macOS. Reason: "
+                          "Cannot enable nested VT-x/AMD-V without nested-paging and unrestricted guest execution!")
+def test_run_windows_valid_image(capfd, delay):
+    """
+    Request a valid Windows container image.
+
+    Note: This is currently not possible, because somehow VT-x does not work
+          well enough to support this scenario, at least not on macOS Catalina.
+    """
+    runner = CliRunner()
+
+    result = runner.invoke(cli, "run --rm --platform=windows/amd64 mcr.microsoft.com/windows/nanoserver:ltsc2022 -- cmd /C ver", catch_exceptions=False)
+    assert result.exit_code == 0
+
+    captured = capfd.readouterr()
+    assert "Microsoft Windows [Version 10.0.20348.707]" in captured.out
+
+
+def test_run_windows_invalid_image(caplog, delay):
+    """
+    Request an invalid Windows container image and make sure it croaks correctly.
+    """
+    runner = CliRunner()
+
+    result = runner.invoke(cli, "run --rm --platform=windows/amd64 images.example.org/foo/bar:special -- cmd /C ver", catch_exceptions=False)
+    assert result.exit_code == 1
+
+    assert re.match(".*Inquiring information about OCI image .+ failed.*", caplog.text)
+    assert re.match(".*Reason:.*Error parsing image name .* (error )?pinging (container|docker) registry images.example.org.*", caplog.text)
+
+
+def test_run_windows_mocked_noninteractive():
+    """
+    Pretend to launch a Windows container, but don't.
+    Reason: The `WinRunner` machinery has been mocked completely.
+    """
+    runner = CliRunner()
+
+    with mock.patch("racker.cli.WinRunner") as winrunner:
+        result = runner.invoke(cli, "run --rm --platform=windows/amd64 images.example.org/foo/bar:special -- cmd /C ver", catch_exceptions=False)
+    assert result.exit_code == 0
+    assert winrunner.mock_calls == [
+        mock.call(image='images.example.org/foo/bar:special'),
+        mock.call().setup(),
+        mock.call().start(),
+        mock.call().run('cmd /C ver', interactive=False, tty=False),
+    ]
+
+
+def test_run_windows_mocked_interactive():
+    """
+    Pretend to launch a Windows container, but don't.
+    Reason: The `WinRunner` machinery has been mocked completely.
+    """
+    runner = CliRunner()
+
+    with mock.patch("racker.cli.WinRunner") as winrunner:
+        result = runner.invoke(cli, "run -it --rm --platform=windows/amd64 images.example.org/foo/bar:special -- cmd /C ver", catch_exceptions=False)
+    assert result.exit_code == 0
+    assert winrunner.mock_calls == [
+        mock.call(image='images.example.org/foo/bar:special'),
+        mock.call().setup(),
+        mock.call().start(),
+        mock.call().run('cmd /C ver', interactive=True, tty=True),
+    ]
 
 
 # Unfortunately, this fails.

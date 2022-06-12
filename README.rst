@@ -109,6 +109,13 @@ another one for Windows.
   `systemd-nspawn`_. Provisioning of additional software is performed using the
   native package manager of the corresponding Linux distribution.
 
+- For running Windows operating systems containers, Racker uses `Vagrant`_,
+  `Docker`_, and `Windows Docker Machine`_. The virtual machine base image is
+  acquired from `Vagrant Cloud`_, container images are acquired from the
+  `Microsoft Container Registry`_. For provisioning additional software, the
+  `Chocolatey`_ package manager is used. All of cmd, PowerShell and Bash are
+  pre-installed on the container images.
+
 
 Operating system coverage
 -------------------------
@@ -131,6 +138,11 @@ Linux
 - Rocky Linux 8
 - SUSE SLES 15 and BCI:latest
 - Ubuntu LTS 20 and 22 (focal, jammy)
+
+Windows
+.......
+- Windows Server Core LTSC 2016, 2019, and 2022
+- Windows Nano Server 1809 and LTSC 2022
 
 
 Prior art
@@ -212,6 +224,8 @@ Racker
 The ``racker`` program aims to resemble the semantics of Docker by providing a
 command line interface compatible with the ``docker`` command.
 
+Linux
+-----
 ::
 
     # Invoke the vanilla Docker `hello-world` image.
@@ -243,6 +257,20 @@ command line interface compatible with the ``docker`` command.
     # Use stdin and stdout, with timing.
     time echo "hello world" | racker run -it --rm fedora:37 cat /dev/stdin > hello
     cat hello
+
+Windows
+-------
+
+An example of a basic command line invocation should get you started,
+especially if you are familiar with the ``docker`` command::
+
+    racker --verbose run --rm --platform=windows/amd64 mcr.microsoft.com/windows/servercore:ltsc2022 -- wmic os get caption
+
+    Caption
+    Microsoft Windows Server 2022 Datacenter
+
+More extensive information, including many examples, can be found at the
+`Racker Windows backend`_ documentation.
 
 
 Postroj
@@ -429,6 +457,7 @@ Troubleshooting
 .. _Packer: https://www.packer.io/
 .. _Podman: https://podman.io/
 .. _Racker sandbox installation: https://github.com/cicerops/racker/blob/main/doc/sandbox.rst
+.. _Racker Windows backend: https://github.com/cicerops/racker/blob/main/doc/winrunner.rst
 .. _skopeo: https://github.com/containers/skopeo
 .. _systemd: https://www.freedesktop.org/wiki/Software/systemd/
 .. _systemd-nspawn: https://www.freedesktop.org/software/systemd/man/systemd-nspawn.html

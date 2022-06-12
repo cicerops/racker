@@ -20,7 +20,6 @@ markers = [
 [tool.coverage.run]
 omit = [
     "testing/*",
-    "postroj/winrunner.py",
 ]
 
 [tool.coverage.report]
