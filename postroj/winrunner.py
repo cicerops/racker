@@ -189,8 +189,12 @@ class WinRunner:
         if interactive or tty:
             option_interactive = "-it"
 
-        # TODO: Propagate ``--rm`` appropriately.
-        command = f"docker --context={self.wdm_machine} run {option_interactive} --rm {self.image_real} {command}"
+        # TODO: Propagate ``--rm`` option appropriately.
+        # TODO: Propagate ``--volume`` option.
+        #       option_volume = "--volume=C:/Users/amo/dev/cicerops-foss/sources/postroj:C:/racker"
+        #       https://github.com/cicerops/racker/issues/8
+        option_volume = ""
+        command = f"docker --context={self.wdm_machine} run {option_interactive} --rm {option_volume} {self.image_real} {command}"
 
         # When an interactive prompt is requested, spawn a shell without further ado.
         if interactive or tty:
